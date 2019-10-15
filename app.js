@@ -27,7 +27,7 @@ app.get('/campgrounds/new', (req, res)=>{
 
 app.post('/campgrounds', (req,res)=>{
     let name = req.body.name;
-    let image = req.body.name;
+    let image = req.body.image;
     let campground = {name: name, image: image};
     campgrounds.push(campground);
 
