@@ -3,7 +3,10 @@ const express = require('express'),
     request = require('request'),
     bodyParser = require('body-parser'),
     mongoose = require('mongoose'),
-    Campground = require('./models/campground');
+    Campground = require('./models/campground'),
+    seedDB = require('./seeds');
+
+seedDB();
 
 mongoose.connect('mongodb://localhost:27017/yelp_camp', {useNewUrlParser: true, useUnifiedTopology: true });
 
