@@ -8,10 +8,12 @@ const express = require('express'),
     seedDB = require('./seeds');
 
 //Setup
-seedDB();
 mongoose.connect('mongodb://localhost:27017/yelp_camp', {useNewUrlParser: true, useUnifiedTopology: true });
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
+app.use(express.static(__dirname + "/public"));
+//Run if you need to clear DB and reseed with a few campgrounds
+//seedDB();
 
 
 //Landing Page
