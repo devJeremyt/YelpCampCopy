@@ -15,6 +15,10 @@ mongoose.connect('mongodb://localhost:27017/yelp_camp', {useNewUrlParser: true, 
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 app.use(express.static(__dirname + "/public"));
+app.use(function(req, res, next){
+    res.locals.currentUser = req.user;
+    next();
+})
 //Run if you need to clear DB and reseed with a few campgrounds
 //seedDB();
 
@@ -42,7 +46,7 @@ app.get('/campgrounds',(req,res)=>{
          if(err){
              console.log(err);
          } else{
-            res.render('campgrounds/index', {campgrounds : campgrounds});
+            res.render('campgrounds/index', {campgrounds : campgrounds, currentUser: req.user});
          }
      });
 });
@@ -81,7 +85,7 @@ app.post('/campgrounds', (req,res)=>{
 });
 
 // New Comment - Shows form for new comment
-app.get("/campgrounds/:id/comment/new", (req, res)=>{
+app.get("/campgrounds/:id/comment/new", isLoggedIn, (req, res)=>{
     Campground.findById(req.params.id, (err, campground)=>{
         if(err){
             console.log(err);
@@ -93,7 +97,7 @@ app.get("/campgrounds/:id/comment/new", (req, res)=>{
 });
 
 // New Comment - Creates new comment
-app.post("/campgrounds/:id/comment", (req,res)=>{
+app.post("/campgrounds/:id/comment", isLoggedIn, (req,res)=>{
     Campground.findById(req.params.id, (err, campground)=>{
         if(err){
             console.log(err);
@@ -132,6 +136,33 @@ app.post("/register", (req,res)=>{
     })
 });
 
+//SHOW LOGIN FORM
+app.get("/login", (req,res)=>{
+    res.render("login");
+});
+
+//HANDLING LOGIN LOGIC
+app.post("/login", passport.authenticate("local", 
+    {
+        successRedirect: "/campgrounds", 
+        failureRedirect: "/login"
+    }), (reg, res)=>{
+    
+});
+
+// LOGOUT ROUTE
+app.get("/logout", (req, res)=>{
+    req.logOut();
+    res.redirect("/campgrounds");
+});
+
+
+function isLoggedIn(req, res, next){
+    if(req.isAuthenticated()){
+        return next();
+    } 
+    res.redirect("/login");
+}
 
 app.listen(3000, ()=>{
 	console.log('Server is running');
