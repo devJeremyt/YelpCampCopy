@@ -14,7 +14,7 @@ router.get('/',(req,res)=>{
 });
 
 //NEW - show form for adding campground
-router.get('/new', (req, res)=>{
+router.get('/new', isLoggedIn, (req, res)=>{
        res.render('campgrounds/new.ejs');
 });
 
@@ -30,15 +30,21 @@ router.get("/:id", (req,res)=>{
 });
 
 //CREATE - adds new campground
-router.post('/', (req,res)=>{
+router.post('/', isLoggedIn, (req,res)=>{
    let name = req.body.name;
    let image = req.body.image;
    let description = req.body.description;
-   let campground = {name: name, image: image, description: description};
+   let author = {
+       id: req.user._id,
+       username: req.user.username
+   };
+   let campground = {name: name, image: image, description: description, author:author};
+
    Campground.create(campground, (err,campground)=>{
        if(err){
            console.log(err);
        }else{
+           console.log(campground);
            res.redirect('/campgrounds');
        }
    });
