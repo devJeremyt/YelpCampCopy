@@ -19,8 +19,8 @@ app.use(function(req, res, next){
     res.locals.currentUser = req.user;
     next();
 })
-//Run if you need to clear DB and reseed with a few campgrounds
-//seedDB();
+
+//seedDB(); //Run if you need to clear DB and reseed with a few campgrounds
 
 //Passport Configuration
 app.use(require("express-session")({
@@ -34,135 +34,13 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-//Landing Page
-app.get('/', (req,res)=>{
-	res.render('landing');
-});
+const campgroundRoutes = require("./routes/campgrounds"),
+    commentRoutes = require("./routes/comments"),
+    indexRoutes = require("./routes/index");
 
-
-//INDEX - shows all the campgrounds
-app.get('/campgrounds',(req,res)=>{
-	 Campground.find({}, (err, campgrounds)=>{
-         if(err){
-             console.log(err);
-         } else{
-            res.render('campgrounds/index', {campgrounds : campgrounds, currentUser: req.user});
-         }
-     });
-});
-
-//NEW - show form for adding campground
-app.get('/campgrounds/new', (req, res)=>{
-        res.render('campgrounds/new.ejs');
-});
-
-//SHOW - shows info for specific campground
-app.get("/campgrounds/:id", (req,res)=>{
-    Campground.findById(req.params.id).populate('comments').exec((err, foundCampground)=>{
-        if(err){
-            console.log(err);
-        } else {
-            res.render('campgrounds/show', {campground: foundCampground});
-        }
-    });
-});
-
-//CREATE - adds new campground
-app.post('/campgrounds', (req,res)=>{
-    let name = req.body.name;
-    let image = req.body.image;
-    let description = req.body.description;
-    let campground = {name: name, image: image, description: description};
-    Campground.create(campground, (err,campground)=>{
-        if(err){
-            console.log(err);
-        }else{
-            res.redirect('/campgrounds');
-        }
-    });
-
-    
-});
-
-// New Comment - Shows form for new comment
-app.get("/campgrounds/:id/comment/new", isLoggedIn, (req, res)=>{
-    Campground.findById(req.params.id, (err, campground)=>{
-        if(err){
-            console.log(err);
-        } else {
-            res.render("comments/new", {campground: campground});
-        }
-    });
-    
-});
-
-// New Comment - Creates new comment
-app.post("/campgrounds/:id/comment", isLoggedIn, (req,res)=>{
-    Campground.findById(req.params.id, (err, campground)=>{
-        if(err){
-            console.log(err);
-            res.redirect("/campgrounds");
-        } else {
-            Comment.create(req.body.comment, (err, comment)=>{
-                if(err) {
-                    console.log(err);
-                } else {
-                    campground.comments.push(comment);
-                    campground.save();
-                    res.redirect("/campgrounds/" + campground._id)
-                }
-            });
-        }
-    });
-});
-
-// Authentication Routes
-
-//Show register form
-app.get("/register", (req,res)=>{
-    res.render("register");
-});
-
-app.post("/register", (req,res)=>{
-    let user = new User({username: req.body.username});
-    User.register(user, req.body.password, (err, user)=>{
-        if(err){
-            console.log(err);
-            return res.render("/register");
-        }
-        passport.authenticate("local")(req, res, ()=>{
-            res.redirect("/campgrounds");
-        });
-    })
-});
-
-//SHOW LOGIN FORM
-app.get("/login", (req,res)=>{
-    res.render("login");
-});
-
-//HANDLING LOGIN LOGIC
-app.post("/login", passport.authenticate("local", 
-    {
-        successRedirect: "/campgrounds", 
-        failureRedirect: "/login"
-    }), (reg, res)=>{
-    
-});
-
-// LOGOUT ROUTE
-app.get("/logout", (req, res)=>{
-    req.logOut();
-    res.redirect("/campgrounds");
-});
-
-
-function isLoggedIn(req, res, next){
-    if(req.isAuthenticated()){
-        return next();
-    } 
-    res.redirect("/login");
-}
+app.use(indexRoutes);
+app.use("/campgrounds",campgroundRoutes);
+app.use("/campgrounds/:id/comment", commentRoutes);
 
 app.listen(3000, ()=>{
 	console.log('Server is running');
